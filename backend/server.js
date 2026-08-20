@@ -1,0 +1,170 @@
+const express = require('express');
+const cors = require('cors');
+require('dotenv').config();
+
+const { initDB, addBook, getAllBooks } = require('./db');
+const { calculatePenaltyAndStatus } = require('./utils/penaltyCalculator');
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Initialize Database connection on server startup
+initDB();
+
+/**
+ * Health check endpoint
+ */
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', message: 'Mini Library API is running' });
+});
+
+/**
+ * GET /api/books
+ * Retrieves all books enriched with dynamically calculated penalty fees and statuses.
+ */
+app.get('/api/books', async (req, res) => {
+  try {
+    const rawBooks = await getAllBooks();
+
+    // Map each book through the server-side penalty calculator
+    const enrichedBooks = rawBooks.map(book => {
+      // Standardize date string to YYYY-MM-DD
+      const checkoutDateStr = new Date(book.checkout_date).toISOString().split('T')[0];
+      const penaltyData = calculatePenaltyAndStatus(checkoutDateStr);
+
+      return {
+        id: book.id,
+        title: book.title,
+        description: book.description || '',
+        borrower_name: book.borrower_name,
+        checkout_date: checkoutDateStr,
+        ...penaltyData
+      };
+    });
+
+    res.json({
+      success: true,
+      count: enrichedBooks.length,
+      data: enrichedBooks
+    });
+  } catch (error) {
+    console.error('Error fetching books:', error);
+    res.status(500).json({ success: false, message: 'Server error while fetching books' });
+  }
+});
+
+/**
+ * POST /api/books
+ * Creates a new borrowed book record.
+ * Body: { title, description, borrower_name, checkout_date }
+ */
+app.post('/api/books', async (req, res) => {
+  try {
+    const { title, description, borrower_name, checkout_date } = req.body;
+
+    // Validation
+    if (!title || !borrower_name || !checkout_date) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide title, borrower_name, and checkout_date.'
+      });
+    }
+
+    const newBook = await addBook({
+      title: title.trim(),
+      description: description ? description.trim() : '',
+      borrower_name: borrower_name.trim(),
+      checkout_date
+    });
+
+    const checkoutDateStr = new Date(newBook.checkout_date).toISOString().split('T')[0];
+    const penaltyData = calculatePenaltyAndStatus(checkoutDateStr);
+
+    const enrichedBook = {
+      id: newBook.id,
+      title: newBook.title,
+      description: newBook.description,
+      borrower_name: newBook.borrower_name,
+      checkout_date: checkoutDateStr,
+      ...penaltyData
+    };
+
+    res.status(201).json({
+      success: true,
+      message: 'Book added successfully',
+      data: enrichedBook
+    });
+  } catch (error) {
+    console.error('Error adding book:', error);
+    res.status(500).json({ success: false, message: 'Server error while adding book' });
+  }
+});
+
+/**
+ * POST /api/books/seed
+ * Helper route to populate sample books covering all UI status states (Useful for Video Demo!)
+ */
+app.post('/api/books/seed', async (req, res) => {
+  try {
+    const today = new Date();
+
+    const formatDate = (daysAgo) => {
+      const d = new Date(today);
+      d.setDate(d.getDate() - daysAgo);
+      return d.toISOString().split('T')[0];
+    };
+
+    const sampleBooks = [
+      {
+        title: "Clean Code",
+        description: "A Handbook of Agile Software Craftsmanship",
+        borrower_name: "Alice Smith",
+        checkout_date: formatDate(2) // 2 days ago -> SAFE (due in 5 days)
+      },
+      {
+        title: "The Pragmatic Programmer",
+        description: "Your Journey To Mastery",
+        borrower_name: "Bob Jones",
+        checkout_date: formatDate(6) // 6 days ago -> DUE_TOMORROW (due tomorrow)
+      },
+      {
+        title: "Design Patterns",
+        description: "Elements of Reusable Object-Oriented Software",
+        borrower_name: "Charlie Brown",
+        checkout_date: formatDate(9) // 9 days ago -> 2 days overdue ($2 penalty)
+      },
+      {
+        title: "Refactoring",
+        description: "Improving the Design of Existing Code",
+        borrower_name: "Diana Prince",
+        checkout_date: formatDate(12) // 12 days ago -> 5 days overdue ($7 penalty)
+      },
+      {
+        title: "Introduction to Algorithms (CLRS)",
+        description: "Comprehensive Algorithms Guide",
+        borrower_name: "Evan Wright",
+        checkout_date: formatDate(25) // 25 days ago -> 18 days overdue ($15 max penalty cap)
+      }
+    ];
+
+    for (const book of sampleBooks) {
+      await addBook(book);
+    }
+
+    res.json({ success: true, message: 'Sample demo books seeded successfully' });
+  } catch (error) {
+    console.error('Error seeding books:', error);
+    res.status(500).json({ success: false, message: 'Server error during seed' });
+  }
+});
+
+// Start Server
+app.listen(PORT, () => {
+  console.log(`🚀 Mini Library Backend API listening on port ${PORT}`);
+  console.log(`   GET  http://localhost:${PORT}/api/books`);
+  console.log(`   POST http://localhost:${PORT}/api/books`);
+});
