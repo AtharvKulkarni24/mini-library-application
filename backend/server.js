@@ -16,6 +16,23 @@ app.use(express.json());
 initDB();
 
 /**
+ * Formats a MySQL date or string input safely to YYYY-MM-DD without UTC timezone shifting.
+ */
+const formatDateStr = (dateVal) => {
+  if (!dateVal) return '';
+  if (typeof dateVal === 'string') {
+    return dateVal.split('T')[0];
+  }
+  if (dateVal instanceof Date) {
+    const year = dateVal.getFullYear();
+    const month = String(dateVal.getMonth() + 1).padStart(2, '0');
+    const day = String(dateVal.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  return String(dateVal);
+};
+
+/**
  * Health check endpoint
  */
 app.get('/api/health', (req, res) => {
@@ -32,8 +49,8 @@ app.get('/api/books', async (req, res) => {
 
     // Map each book through the server-side penalty calculator
     const enrichedBooks = rawBooks.map(book => {
-      // Standardize date string to YYYY-MM-DD
-      const checkoutDateStr = new Date(book.checkout_date).toISOString().split('T')[0];
+      // Standardize date string to YYYY-MM-DD without timezone shift
+      const checkoutDateStr = formatDateStr(book.checkout_date);
       const penaltyData = calculatePenaltyAndStatus(checkoutDateStr);
 
       return {
@@ -81,7 +98,7 @@ app.post('/api/books', async (req, res) => {
       checkout_date
     });
 
-    const checkoutDateStr = new Date(newBook.checkout_date).toISOString().split('T')[0];
+    const checkoutDateStr = formatDateStr(newBook.checkout_date);
     const penaltyData = calculatePenaltyAndStatus(checkoutDateStr);
 
     const enrichedBook = {
