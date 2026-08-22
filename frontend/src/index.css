@@ -375,3 +375,29 @@ textarea.form-control {
   border-radius: 8px;
   color: var(--text-muted);
 }
+
+.btn-return {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background-color: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-return:hover:not(:disabled) {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.btn-return:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

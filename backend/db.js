@@ -95,9 +95,24 @@ async function getAllBooks() {
   return rows;
 }
 
+/**
+ * 4. deleteBook(id)
+ * Deletes a book record by ID from the MySQL `books` table.
+ */
+async function deleteBook(id) {
+  if (!pool) {
+    throw new Error('Database pool not initialized. Call initDB() first.');
+  }
+
+  const query = `DELETE FROM books WHERE id = ?;`;
+  const [result] = await pool.query(query, [id]);
+  return result.affectedRows > 0;
+}
+
 module.exports = {
   initDB,
   addBook,
-  getAllBooks
+  getAllBooks,
+  deleteBook
 };
 

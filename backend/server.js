@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
-const { initDB, addBook, getAllBooks } = require('./db');
+const { initDB, addBook, getAllBooks, deleteBook } = require('./db');
 const { calculatePenaltyAndStatus } = require('./utils/penaltyCalculator');
 
 const app = express();
@@ -105,66 +105,29 @@ app.post('/api/books', async (req, res) => {
 });
 
 /**
- * POST /api/books/seed
- * Helper route to populate sample books covering all UI status states (Useful for Video Demo!)
+ * DELETE /api/books/:id
+ * Removes/returns a borrowed book from the database.
  */
-app.post('/api/books/seed', async (req, res) => {
+app.delete('/api/books/:id', async (req, res) => {
   try {
-    const today = new Date();
+    const { id } = req.params;
+    const success = await deleteBook(id);
 
-    const formatDate = (daysAgo) => {
-      const d = new Date(today);
-      d.setDate(d.getDate() - daysAgo);
-      return d.toISOString().split('T')[0];
-    };
-
-    const sampleBooks = [
-      {
-        title: "Clean Code",
-        description: "A Handbook of Agile Software Craftsmanship",
-        borrower_name: "Alice Smith",
-        checkout_date: formatDate(2) // 2 days ago -> SAFE (due in 5 days)
-      },
-      {
-        title: "The Pragmatic Programmer",
-        description: "Your Journey To Mastery",
-        borrower_name: "Bob Jones",
-        checkout_date: formatDate(6) // 6 days ago -> DUE_TOMORROW (due tomorrow)
-      },
-      {
-        title: "Design Patterns",
-        description: "Elements of Reusable Object-Oriented Software",
-        borrower_name: "Charlie Brown",
-        checkout_date: formatDate(9) // 9 days ago -> 2 days overdue ($2 penalty)
-      },
-      {
-        title: "Refactoring",
-        description: "Improving the Design of Existing Code",
-        borrower_name: "Diana Prince",
-        checkout_date: formatDate(12) // 12 days ago -> 5 days overdue ($7 penalty)
-      },
-      {
-        title: "Introduction to Algorithms (CLRS)",
-        description: "Comprehensive Algorithms Guide",
-        borrower_name: "Evan Wright",
-        checkout_date: formatDate(25) // 25 days ago -> 18 days overdue ($15 max penalty cap)
-      }
-    ];
-
-    for (const book of sampleBooks) {
-      await addBook(book);
+    if (!success) {
+      return res.status(404).json({ success: false, message: 'Book not found' });
     }
 
-    res.json({ success: true, message: 'Sample demo books seeded successfully' });
+    res.json({ success: true, message: 'Book returned successfully' });
   } catch (error) {
-    console.error('Error seeding books:', error);
-    res.status(500).json({ success: false, message: 'Server error during seed' });
+    console.error('Error deleting book:', error);
+    res.status(500).json({ success: false, message: 'Server error while returning book' });
   }
 });
 
 // Start Server
 app.listen(PORT, () => {
   console.log(`🚀 Mini Library Backend API listening on port ${PORT}`);
-  console.log(`   GET  http://localhost:${PORT}/api/books`);
-  console.log(`   POST http://localhost:${PORT}/api/books`);
+  console.log(`   GET    http://localhost:${PORT}/api/books`);
+  console.log(`   POST   http://localhost:${PORT}/api/books`);
+  console.log(`   DELETE http://localhost:${PORT}/api/books/:id`);
 });

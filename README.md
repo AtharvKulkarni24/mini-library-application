@@ -19,7 +19,6 @@ A lightweight, full-stack dashboard designed to track borrowed books, their due 
   * Clean, classic React dashboard built with Vite.
   * Borrowing form with Title, Borrower Name, Description, and Checkout Date Picker.
   * Filter tabs: `All`, `Overdue`, `Due Tomorrow`, `Safe`.
-  * **⚡ Seed Demo Data Button:** One-click feature to instantly populate 5 test books covering all penalty status tiers.
 * **MySQL Database Persistence:**
   * Relational storage using Node.js `mysql2` driver with promise pool.
 
@@ -121,7 +120,7 @@ The React UI will run at: `http://localhost:3000`
 | :--- | :--- | :--- |
 | `GET` | `/api/books` | Fetches all books enriched with server-calculated penalty fees & dynamic statuses |
 | `POST` | `/api/books` | Adds a new borrowed book record (`title`, `borrower_name`, `checkout_date`, `description`) |
-| `POST` | `/api/books/seed` | Seeds 5 pre-populated test books covering all status tiers for quick demo |
+| `DELETE` | `/api/books/:id` | Returns/deletes a borrowed book record from MySQL by ID |
 | `GET` | `/api/health` | Health check endpoint |
 
 ---
@@ -133,7 +132,7 @@ When recording your mandatory 3-minute screen share:
 1. **Introduction (0:00 - 0:30):**
    * Introduce yourself and state the project goal (Library Borrowing & Tiered Late Fee Dashboard).
 2. **UI & Feature Walkthrough (0:30 - 1:30):**
-   * Click **"⚡ Seed Demo Data"** to show pre-populated books in the grid.
+   * Show the existing books loaded from the MySQL database in the grid.
    * Demonstrate the **Green Badge** (`SAFE`), **Yellow Badge** (`DUE_TOMORROW`), and **Red Badges** (`OVERDUE` with $2, $7, and $15 capped fees).
    * Fill out the **Borrow Book Form** on screen with a backdated checkout date to show a new book appearing with its status.
 3. **Backend Code Walkthrough (1:30 - 3:00):**

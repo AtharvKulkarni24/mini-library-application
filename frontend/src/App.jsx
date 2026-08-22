@@ -7,7 +7,6 @@ import BookGrid from './components/BookGrid';
 export default function App() {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [seedLoading, setSeedLoading] = useState(false);
 
   // Fetch books from Node.js backend
   const fetchBooks = async () => {
@@ -34,25 +33,14 @@ export default function App() {
     setBooks(prev => [newBook, ...prev]);
   };
 
-  // Handle seeding sample test data for video presentation demo
-  const handleSeedData = async () => {
-    try {
-      setSeedLoading(true);
-      const res = await fetch('/api/books/seed', { method: 'POST' });
-      const data = await res.json();
-      if (data.success) {
-        await fetchBooks();
-      }
-    } catch (error) {
-      console.error('Error seeding data:', error);
-    } finally {
-      setSeedLoading(false);
-    }
+  // Handle returning/deleting a book
+  const handleBookDeleted = (id) => {
+    setBooks(prev => prev.filter(book => book.id !== id));
   };
 
   return (
     <div className="container">
-      <Header onSeed={handleSeedData} loading={seedLoading} />
+      <Header />
       <PenaltyRuleBanner />
 
       <main className="dashboard-grid">
@@ -61,7 +49,7 @@ export default function App() {
         </aside>
 
         <section>
-          <BookGrid books={books} loading={loading} />
+          <BookGrid books={books} loading={loading} onBookDeleted={handleBookDeleted} />
         </section>
       </main>
     </div>

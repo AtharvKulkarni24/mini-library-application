@@ -1,7 +1,34 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-export default function BookCard({ book }) {
-  const { title, description, borrower_name, checkout_date, dueDate, daysOverdue, penalty, status } = book;
+export default function BookCard({ book, onBookDeleted }) {
+  const { id, title, description, borrower_name, checkout_date, dueDate, daysOverdue, penalty, status } = book;
+  const [deleting, setDeleting] = useState(false);
+
+  const handleReturnBook = async () => {
+    if (!window.confirm(`Mark "${title}" as returned? This will remove it from borrowed books.`)) {
+      return;
+    }
+
+    try {
+      setDeleting(true);
+      const res = await fetch(`/api/books/${id}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (onBookDeleted) {
+          onBookDeleted(id);
+        }
+      } else {
+        alert(data.message || 'Failed to return book.');
+      }
+    } catch (err) {
+      console.error('Error returning book:', err);
+      alert('Network error while returning book.');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const getStatusLabel = () => {
     switch (status) {
@@ -53,6 +80,15 @@ export default function BookCard({ book }) {
             <span style={{ fontWeight: 600, color: '#059669' }}>$0.00</span>
           </div>
         )}
+
+        <button
+          className="btn-return"
+          onClick={handleReturnBook}
+          disabled={deleting}
+          title="Mark book as returned"
+        >
+          {deleting ? 'Returning...' : '✓ Return Book'}
+        </button>
       </div>
     </div>
   );

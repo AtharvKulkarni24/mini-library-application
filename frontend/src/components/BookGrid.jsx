@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import BookCard from './BookCard';
 
-export default function BookGrid({ books, loading }) {
+export default function BookGrid({ books, loading, onBookDeleted }) {
   const [filter, setFilter] = useState('ALL');
 
   const filteredBooks = books.filter(book => {
@@ -55,13 +55,13 @@ export default function BookGrid({ books, loading }) {
         <div className="empty-state">
           <p>No books found for this filter.</p>
           <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
-            Add a new book using the form or click "⚡ Seed Demo Data" above.
+            Add a new book using the form on the left to get started.
           </span>
         </div>
       ) : (
         <div className="books-container">
           {filteredBooks.map(book => (
-            <BookCard key={book.id} book={book} />
+            <BookCard key={book.id} book={book} onBookDeleted={onBookDeleted} />
           ))}
         </div>
       )}
