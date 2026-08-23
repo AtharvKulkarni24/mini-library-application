@@ -8,8 +8,18 @@ const { calculatePenaltyAndStatus } = require('./utils/penaltyCalculator');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
+// Strict CORS configuration: Only allow your official Vercel domain and local development
+const allowedOrigins = [
+  (process.env.FRONTEND_URL || 'https://mini-library-application.vercel.app').replace(/\/$/, ''),
+  'http://localhost:3000',
+  'http://localhost:5173'
+];
+
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // Initialize Database connection on server startup
