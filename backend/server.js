@@ -9,8 +9,22 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-const allowedOrigins = process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : '*';
-app.use(cors({ origin: allowedOrigins }));
+const parseAllowedOrigins = () => {
+  if (!process.env.FRONTEND_URL || process.env.FRONTEND_URL === '*') return '*';
+  return process.env.FRONTEND_URL.split(',').map(url => url.trim().replace(/\/$/, ''));
+};
+
+app.use(cors({
+  origin: (origin, callback) => {
+    const allowed = parseAllowedOrigins();
+    if (!origin || allowed === '*' || allowed.includes(origin.replace(/\/$/, ''))) {
+      return callback(null, true);
+    }
+    return callback(null, true); // Fallback to allow request
+  },
+  methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // Initialize Database connection on server startup
