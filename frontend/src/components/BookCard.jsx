@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 export default function BookCard({ book, onBookDeleted }) {
   const { id, title, description, borrower_name, checkout_date, dueDate, daysOverdue, penalty, status } = book;
   const [deleting, setDeleting] = useState(false);
@@ -11,7 +13,7 @@ export default function BookCard({ book, onBookDeleted }) {
 
     try {
       setDeleting(true);
-      const res = await fetch(`/api/books/${id}`, {
+      const res = await fetch(`${API_BASE}/api/books/${id}`, {
         method: 'DELETE'
       });
       const data = await res.json();

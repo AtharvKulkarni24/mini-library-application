@@ -4,6 +4,8 @@ import PenaltyRuleBanner from './components/PenaltyRuleBanner';
 import BookForm from './components/BookForm';
 import BookGrid from './components/BookGrid';
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 export default function App() {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,7 +14,7 @@ export default function App() {
   const fetchBooks = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/books');
+      const res = await fetch(`${API_BASE}/api/books`);
       const data = await res.json();
       if (data.success) {
         setBooks(data.data);

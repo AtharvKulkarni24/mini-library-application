@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 export default function BookForm({ onBookAdded }) {
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -29,7 +31,7 @@ export default function BookForm({ onBookAdded }) {
 
     try {
       setSubmitting(true);
-      const res = await fetch('/api/books', {
+      const res = await fetch(`${API_BASE}/api/books`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)

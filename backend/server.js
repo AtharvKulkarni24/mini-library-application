@@ -9,7 +9,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+const allowedOrigins = process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : '*';
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
 // Initialize Database connection on server startup

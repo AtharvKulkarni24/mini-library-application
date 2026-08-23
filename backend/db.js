@@ -2,6 +2,8 @@ const mysql = require('mysql2/promise');
 require('dotenv').config();
 
 // Configuration from environment variables
+const sslConfig = process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false;
+
 const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
@@ -10,28 +12,36 @@ const dbConfig = {
   port: parseInt(process.env.DB_PORT || '3306', 10),
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  ssl: sslConfig
 };
 
 let pool = null;
 
 /**
  * 1. initDB()
- * Connects to MySQL, ensures the database exists, creates the connection pool,
+ * Connects to MySQL, ensures the connection pool is ready,
  * and creates the `books` table if it does not already exist.
  */
 async function initDB() {
   try {
-    // Connect to MySQL server without database specified to verify server & create database
-    const tempConnection = await mysql.createConnection({
-      host: dbConfig.host,
-      user: dbConfig.user,
-      password: dbConfig.password,
-      port: dbConfig.port
-    });
+    // Attempt to create database if running locally or with root privileges
+    try {
+      const tempConnection = await mysql.createConnection({
+        host: dbConfig.host,
+        user: dbConfig.user,
+        password: dbConfig.password,
+        port: dbConfig.port,
+        ssl: sslConfig
+      });
 
-    await tempConnection.query(`CREATE DATABASE IF NOT EXISTS \`${dbConfig.database}\`;`);
-    await tempConnection.end();
+      await tempConnection.query(`CREATE DATABASE IF NOT EXISTS \`${dbConfig.database}\`;`);
+      await tempConnection.end();
+    } catch (createDbErr) {
+      // Cloud database services (e.g. Aiven, Railway) pre-create the DB and restrict CREATE DATABASE.
+      // This warning can be safely ignored on managed DB hosts.
+      console.log(`ℹ️ [MySQL] Skipping CREATE DATABASE check (${createDbErr.message})`);
+    }
 
     // Create persistent connection pool
     pool = mysql.createPool(dbConfig);
