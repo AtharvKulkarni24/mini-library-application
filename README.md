@@ -136,19 +136,4 @@ The React UI will run at: `http://localhost:3000`
 | `DELETE` | `/api/books/:id` | Returns/deletes a borrowed book record from MySQL by ID |
 | `GET` | `/api/health` | Health check endpoint |
 
----
 
-## 🎥 3-Minute Video Presentation Script Guide
-
-When recording your mandatory 3-minute screen share:
-
-### 1. Live UI Demonstration (0:00 - 1:00)
-* **Intro (0:00 - 0:15):** Introduce yourself, state the project goal (Library Borrowing & Tiered Late Fee Dashboard), and show the live Vercel URL.
-* **Grid & Status Badges (0:15 - 0:40):** Show the 🟢 **Safe**, 🟡 **Due Tomorrow**, and 🔴 **Overdue** status badges and click through filter tabs.
-* **Form & Inline Return (0:40 - 1:00):** Fill out the form with a backdated checkout date, click **Add Borrowed Book**, and demonstrate returning a book using the inline confirmation box.
-
-### 2. Backend Code Walkthrough (1:00 - 3:00)
-* **Architecture (1:00 - 1:30):** Open VS Code to `backend/utils/penaltyCalculator.js` and explain why penalty calculations are enforced server-side.
-* **Date Math & Normalization (1:30 - 2:15):** Explain `dueDate` addition (+7 days) and `.setHours(0,0,0,0)` date normalization to prevent timezone shift bugs.
-* **Tiered Pricing & Cap (2:15 - 2:45):** Walk through Tier 1 ($1/day for days 1–3), Tier 2 ($2/day for day 4+), and the `$15` penalty cap (`Math.min(penalty, 15)`).
-* **API Enrichment (2:45 - 3:00):** Show `backend/server.js` mapping MySQL rows through `calculatePenaltyAndStatus()` for `GET /api/books`.
